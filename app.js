@@ -1,6 +1,7 @@
 // Start coding here
 import express from "express";
 import { assignments } from "./data/assignments.js";
+import { comments } from "./data/comments.js";
 
 const app = express();
 const port = 4000;
@@ -8,7 +9,8 @@ const port = 4000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-let mockUpAssignmentData = assignments;
+const mockUpAssignmentData = assignments;
+const mockUpCommentData = comments.slice();
 
 app.get("/assignments", (req, res) => {
   const limit = req.query.limit;
@@ -91,6 +93,46 @@ app.put("/assignments/:assignmentsId", (req, res) => {
       data: mockUpAssignmentData[assignmentIndex],
     });
   }
+});
+
+app.get("/assignments/:assignmentsId/comments", (req, res) => {
+  let assignmentIdFromClient = Number(req.params.assignmentsId);
+  const assignmentComment = mockUpCommentData.filter(
+    (comment) => comment.assignmentId === assignmentIdFromClient
+  );
+  if (assignmentComment.length === 0) {
+    return res.status(404).json({
+      message: "This Assignment doesn't have any comment",
+      data: assignmentComment,
+    });
+  } else {
+    return res.json({
+      message: "Complete fetching comments",
+      data: assignmentComment,
+    });
+  }
+});
+
+app.post("/assignments/:assignmentsId/comments", (req, res) => {
+  let assignmentIdFromClient = Number(req.params.assignmentsId);
+
+  const newCommentId =
+    mockUpCommentData.length > 0
+      ? mockUpCommentData[mockUpCommentData.length - 1].id + 1
+      : 1;
+
+  const newComment = {
+    id: newCommentId,
+    assignmentId: assignmentIdFromClient,
+    ...req.body,
+  };
+
+  mockUpCommentData.push(newComment);
+
+  return res.json({
+    message: "New assignment's comment has been created successfully",
+    data: newComment,
+  });
 });
 
 app.listen(port, () => {
